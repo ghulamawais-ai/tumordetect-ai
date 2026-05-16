@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TumorDetect AI — Advanced Brain Tumor Detection</title>
+
+  <!-- Fonts: Syne (display) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <!-- AOS Animations -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <!-- ANIMATED BACKGROUNDS -->
+  <div class="bg-mesh"></div>
+  <canvas id="brainCanvas"></canvas>
+  <div class="scan-line"></div>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="/static/images/logo.png" alt="Logo" class="nav-logo" onerror="this.style.display='none'">
+      <span class="brand-text">TumorDetect<span class="brand-accent">AI</span></span>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#hero" class="nav-link active">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#detector">Detector</a></li>
+        <li><a href="#team">Team</a></li>
+      </ul>
+    </nav>
+    <a href="#detector" class="btn-nav">Analyze MRI <i class="fas fa-arrow-right"></i></a>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        Final Year B.Tech Capstone · Alliance University 2026
+      </div>
+      <h1>
+        Color Contrast Channeling<br>
+        for <span class="gradient-text">Brain Tumor Detection</span>
+      </h1>
+      <p class="hero-desc">
+        A deep learning system combining <strong>RGB+HSV+LAB Color Fusion</strong>,
+        <strong>Dense Attention U-Net</strong> segmentation, <strong>ResNet50</strong>
+        classification, and <strong>Grad-CAM</strong> explainability — delivering precise,
+        transparent brain tumor diagnosis from MRI scans.
+      </p>
+      <div class="hero-buttons">
+        <a href="#detector" class="btn primary">
+          <i class="fas fa-brain"></i> Upload MRI Scan
+        </a>
+        <a href="#pipeline" class="btn secondary">
+          <i class="fas fa-project-diagram"></i> View Pipeline
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-card">
+          <h3>~90%</h3>
+          <p>Test Accuracy</p>
+        </div>
+        <div class="stat-card">
+          <h3>4</h3>
+          <p>Tumor Classes</p>
+        </div>
+        <div class="stat-card">
+          <h3>U-Net+</h3>
+          <p>Segmentation</p>
+        </div>
+        <div class="stat-card">
+          <h3>Grad-CAM</h3>
+          <p>Explainable AI</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Visual -->
+    <div class="hero-visual">
+      <div class="hero-display">
+        <div class="display-header">
+          <span class="display-title">Live Analysis</span>
+          <span class="display-status">
+            <i class="fas fa-circle"></i> System Active
+          </span>
+        </div>
+        <div class="display-brain">
+          <i class="fas fa-brain"></i>
+          <div class="display-scanline"></div>
+        </div>
+        <div class="display-metric">
+          <span>Segmentation</span>
+          <span class="chip">Dense Attention U-Net</span>
+        </div>
+        <div class="display-metric">
+          <span>Classifier</span>
+          <span class="chip">ResNet50</span>
+        </div>
+        <div class="display-metric">
+          <span>Explainability</span>
+          <span class="chip">Grad-CAM</span>
+        </div>
+        <div class="display-metric">
+          <span>Enhancement</span>
+          <span class="chip">RGB + HSV + LAB</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about-section">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-tag">About the Project</span>
+      <h2>AI-Powered Brain Tumor Diagnosis</h2>
+      <p>Automating early detection using state-of-the-art deep learning and explainable AI.</p>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-card" data-aos="fade-right">
+        <div class="card-icon"><i class="fas fa-bullseye"></i></div>
+        <h3>Objective</h3>
+        <p>
+          Assist radiologists by automating brain tumor detection from MRI scans,
+          delivering pixel-level segmentation, multi-class classification, and
+          transparent AI explanations — all in one unified system.
+        </p>
+      </div>
+
+      <div class="about-card" data-aos="fade-up">
+        <div class="card-icon"><i class="fas fa-microchip"></i></div>
+        <h3>Core Technologies</h3>
+        <p>
+          <strong>Dense Attention U-Net</strong> for segmentation ·
+          <strong>ResNet50</strong> (fine-tuned) for 4-class tumor classification ·
+          <strong>Grad-CAM</strong> for explainability ·
+          <strong>CLAHE + RGB/HSV/LAB fusion</strong> for preprocessing ·
+          <strong>ReportLab</strong> for PDF generation.
+        </p>
+      </div>
+
+      <div class="about-card" data-aos="fade-left">
+        <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Clinical Impact</h3>
+        <p>
+          Transparent AI diagnosis with Grad-CAM visual explanations empowers clinicians
+          to validate predictions, understand what the model sees, and make confident,
+          well-informed decisions for patient care.
+        </p>
+      </div>
+    </div>
+
+    <!-- Tech Pills -->
+    <div class="tech-pills" data-aos="fade-up">
+      <span class="pill"><i class="fas fa-layer-group"></i> Dense Attention U-Net</span>
+      <span class="pill"><i class="fas fa-network-wired"></i> ResNet50</span>
+      <span class="pill"><i class="fas fa-fire-alt"></i> Grad-CAM XAI</span>
+      <span class="pill"><i class="fas fa-palette"></i> RGB + HSV + LAB Fusion</span>
+      <span class="pill"><i class="fas fa-sliders-h"></i> CLAHE Enhancement</span>
+      <span class="pill"><i class="fab fa-python"></i> Flask + PyTorch</span>
+      <span class="pill"><i class="fas fa-file-pdf"></i> PDF Report Generator</span>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section id="pipeline" class="pipeline-section">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-tag">Architecture</span>
+      <h2>End-to-End <span class="gradient-text">AI Pipeline</span></h2>
+      <p>Seven precise stages — from raw MRI scan to clinical report.</p>
+    </div>
+
+    <div class="pipeline-flow" data-aos="fade-up">
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="0">
+        <div class="pipe-num">01</div>
+        <div class="pipe-icon"><i class="fas fa-upload"></i></div>
+        <h4>MRI Upload</h4>
+        <p>PNG / JPG scan uploaded via the web interface</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="80">
+        <div class="pipe-num">02</div>
+        <div class="pipe-icon"><i class="fas fa-palette"></i></div>
+        <h4>Preprocessing</h4>
+        <p>CLAHE + RGB / HSV / LAB color fusion for contrast enhancement</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="160">
+        <div class="pipe-num">03</div>
+        <div class="pipe-icon"><i class="fas fa-check-double"></i></div>
+        <h4>MRI Validation</h4>
+        <p>Saturation-based check to confirm valid brain MRI input</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="240">
+        <div class="pipe-num">04</div>
+        <div class="pipe-icon"><i class="fas fa-vector-square"></i></div>
+        <h4>Segmentation</h4>
+        <p>Dense Attention U-Net produces pixel-level tumor mask + measurements</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="320">
+        <div class="pipe-num">05</div>
+        <div class="pipe-icon"><i class="fas fa-tags"></i></div>
+        <h4>Classification</h4>
+        <p>Fine-tuned ResNet50 classifies Glioma / Meningioma / Pituitary / No Tumor</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="400">
+        <div class="pipe-num">06</div>
+        <div class="pipe-icon"><i class="fas fa-fire"></i></div>
+        <h4>Grad-CAM XAI</h4>
+        <p>Gradient heatmap highlights the regions influencing the AI prediction</p>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" data-aos="zoom-in" data-aos-delay="480">
+        <div class="pipe-num">07</div>
+        <div class="pipe-icon"><i class="fas fa-file-medical-alt"></i></div>
+        <h4>PDF Report</h4>
+        <p>Automated clinical report with images, measurements, and AI explanation</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODEL INFO CARDS -->
+  <section class="models-section">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-tag">Under The Hood</span>
+      <h2>Two AI Models Working <span class="gradient-text">Together</span></h2>
+      <p>Each model plays a distinct role in the diagnostic pipeline.</p>
+    </div>
+    <div class="models-grid">
+      <div class="model-card" data-aos="fade-right">
+        <div class="model-badge">Segmentation</div>
+        <div class="model-icon"><i class="fas fa-draw-polygon"></i></div>
+        <h3>Dense Attention U-Net</h3>
+        <p class="model-sub">Pixel-level tumor boundary detection</p>
+        <ul class="model-features">
+          <li><i class="fas fa-check"></i> Dense skip connections for rich feature reuse</li>
+          <li><i class="fas fa-check"></i> Attention gates suppress irrelevant brain regions</li>
+          <li><i class="fas fa-check"></i> Outputs binary tumor mask at full resolution</li>
+          <li><i class="fas fa-check"></i> Measures tumor width, height, area in cm</li>
+          <li><i class="fas fa-check"></i> Morphological post-processing to clean noise</li>
+        </ul>
+      </div>
+      <div class="model-card" data-aos="fade-left">
+        <div class="model-badge classifier">Classification</div>
+        <div class="model-icon classifier"><i class="fas fa-brain"></i></div>
+        <h3>ResNet50 (Fine-Tuned)</h3>
+        <p class="model-sub">4-class tumor type identification</p>
+        <ul class="model-features">
+          <li><i class="fas fa-check"></i> Pretrained on ImageNet, fine-tuned on MRI data</li>
+          <li><i class="fas fa-check"></i> Layers 3 & 4 + FC head unfrozen for training</li>
+          <li><i class="fas fa-check"></i> Class-weighted loss for imbalanced data</li>
+          <li><i class="fas fa-check"></i> ~80% test accuracy across 4 tumor classes</li>
+          <li><i class="fas fa-check"></i> Grad-CAM taps layer4 for explainability</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- DETECTOR -->
+  <section id="detector" class="detector-section">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-tag">AI Detection</span>
+      <h2>Tumor Detection <span class="gradient-text">Engine</span></h2>
+      <p>Fill in patient details, upload an MRI scan, and get an instant AI-powered analysis.</p>
+    </div>
+
+    <div class="patient-form glass-card" data-aos="fade-up">
+      <div class="form-header">
+        <i class="fas fa-user-md"></i>
+        <h3>Patient Details</h3>
+      </div>
+      <div class="form-grid">
+        <div class="input-group">
+          <i class="fas fa-id-card"></i>
+          <input type="text" id="patientId" placeholder="Patient ID">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="patientName" placeholder="Patient Name">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-birthday-cake"></i>
+          <input type="number" id="age" placeholder="Age">
+        </div>
+        <div class="input-group">
+          <i class="fas fa-venus-mars"></i>
+          <select id="gender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="input-group full-width">
+          <i class="fas fa-calendar"></i>
+          <input type="date" id="mriDate">
+        </div>
+      </div>
+    </div>
+
+    <div id="uploadArea" class="upload-box glass-card" data-aos="fade-up">
+      <div class="upload-glow"></div>
+      <div class="upload-icon-wrapper">
+        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+      </div>
+      <h3 class="upload-text">Upload Brain MRI Scan</h3>
+      <p class="upload-subtext">Drag & drop your MRI file here or click to browse</p>
+      <input type="file" id="fileInput" name="file" accept="image/*" hidden>
+      <label for="fileInput" class="btn primary">
+        <i class="fas fa-folder-open"></i> Browse Files
+      </label>
+      <p class="file-types"><i class="fas fa-file-image"></i> Supports: PNG, JPG, JPEG</p>
+      <p id="errorText" class="error-text"></p>
+    </div>
+
+    <div id="loadingSection" class="loading-section hidden">
+      <div class="scan-loader">
+        <div class="scan-ring ring-1"></div>
+        <div class="scan-ring ring-2"></div>
+        <div class="scan-ring ring-3"></div>
+        <i class="fas fa-brain"></i>
+      </div>
+      <h3 id="processingText" class="processing-text">Analyzing Scan...</h3>
+      <p class="processing-sub">Dense Attention U-Net + ResNet50 + Grad-CAM are processing your MRI.</p>
+    </div>
+
+    <div id="resultsSection" class="results hidden">
+      <div class="result-container">
+        <div class="result-header" data-aos="fade-up">
+          <span class="section-tag">Results</span>
+          <h2 class="result-title">AI Analysis <span class="gradient-text">Results</span></h2>
+        </div>
+
+        <div class="result-images">
+          <div class="result-image glass-card">
+            <img id="origImg" src="" alt="Original MRI">
+            <p class="img-label"><i class="fas fa-image"></i> Original MRI</p>
+          </div>
+          <div class="result-image glass-card">
+            <img id="enhancedImg" src="" alt="Enhanced MRI">
+            <p class="img-label"><i class="fas fa-adjust"></i> CLAHE Enhanced (RGB+HSV+LAB)</p>
+          </div>
+          <div class="result-image glass-card">
+            <img id="segImg" src="" alt="Segmentation">
+            <p class="img-label"><i class="fas fa-crosshairs"></i> Dense Attention U-Net Mask</p>
+          </div>
+          <div class="result-image glass-card">
+            <img id="gradcamImg" src="" alt="Grad-CAM">
+            <p class="img-label"><i class="fas fa-fire"></i> ResNet50 Grad-CAM Heatmap</p>
+          </div>
+        </div>
+
+        <div class="result-card glass-card highlight-card">
+          <div class="card-header">
+            <i class="fas fa-diagnoses"></i>
+            <h3>Detection Result</h3>
+          </div>
+          <div class="detection-info">
+            <div class="info-item">
+              <span class="info-label">Predicted Tumor Type</span>
+              <span id="tumorType" class="info-value">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Model Confidence</span>
+              <span id="confidence" class="info-value accent">-</span>
+            </div>
+          </div>
+          <div class="confidence-bar">
+            <div id="confidenceBarInner"></div>
+          </div>
+        </div>
+
+        <div class="result-card glass-card">
+          <div class="card-header">
+            <i class="fas fa-ruler-combined"></i>
+            <h3>Tumor Measurements <span class="model-tag">Dense Attention U-Net</span></h3>
+          </div>
+          <div class="measurements-grid">
+            <div class="measure-box">
+              <i class="fas fa-map-marker-alt"></i>
+              <span class="measure-label">Location</span>
+              <span id="tumorLocation" class="measure-value">-</span>
+            </div>
+            <div class="measure-box">
+              <i class="fas fa-arrows-alt-h"></i>
+              <span class="measure-label">Width</span>
+              <span class="measure-value"><span id="tumorWidth">-</span> cm</span>
+            </div>
+            <div class="measure-box">
+              <i class="fas fa-arrows-alt-v"></i>
+              <span class="measure-label">Height</span>
+              <span class="measure-value"><span id="tumorHeight">-</span> cm</span>
+            </div>
+            <div class="measure-box">
+              <i class="fas fa-vector-square"></i>
+              <span class="measure-label">Area</span>
+              <span class="measure-value"><span id="tumorArea">-</span> cm²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-card glass-card">
+          <div class="card-header">
+            <i class="fas fa-book-medical"></i>
+            <h3>Explainable AI Report <span class="model-tag">ResNet50 + Grad-CAM</span></h3>
+          </div>
+
+          <div class="xai-intro">
+            <i class="fas fa-fire-alt"></i>
+            <p>
+              Grad-CAM (Gradient-weighted Class Activation Mapping) backpropagates the classification
+              gradient through <strong>ResNet50 layer4</strong> to produce a spatial heatmap showing
+              which brain regions most influenced the AI prediction. The three statistics below are
+              extracted directly from that activation map and used to tailor the clinical explanation.
+            </p>
+          </div>
+
+          <div class="cam-stats">
+            <div class="cam-stat">
+              <span class="stat-val" id="camMean">—</span>
+              <span class="stat-lbl">Mean Activation</span>
+            </div>
+            <div class="cam-stat">
+              <span class="stat-val" id="camPeak">—</span>
+              <span class="stat-lbl">Peak Activation</span>
+            </div>
+            <div class="cam-stat">
+              <span class="stat-val" id="camArea">—</span>
+              <span class="stat-lbl">High-Activation Area</span>
+            </div>
+          </div>
+
+          <div class="explanation-block">
+            <h4><i class="fas fa-search"></i> AI Finding — What the Grad-CAM Shows</h4>
+            <p id="tumorDesc" class="desc-text">-</p>
+          </div>
+          <div class="explanation-block">
+            <h4><i class="fas fa-dna"></i> Clinical Context &amp; Possible Cause</h4>
+            <p id="tumorCause" class="desc-text">-</p>
+          </div>
+          <div class="explanation-block">
+            <h4><i class="fas fa-hospital"></i> Treatment &amp; Management Pathway</h4>
+            <p id="tumorTreat" class="desc-text">-</p>
+          </div>
+        </div>
+
+        <div class="result-card glass-card report-card">
+          <div class="card-header">
+            <i class="fas fa-file-medical-alt"></i>
+            <h3>Medical Report</h3>
+          </div>
+          <p>Download the full AI-generated diagnostic report including all images, measurements, and clinical impressions.</p>
+          <a id="downloadPdfBtn" class="btn primary" style="display:none;" download>
+            <i class="fas fa-download"></i> Download PDF Report
+          </a>
+        </div>
+
+        <div class="text-center mt-6">
+          <button class="btn secondary" onclick="resetUpload()">
+            <i class="fas fa-redo"></i> Analyze Another Scan
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section id="team" class="team">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-tag">Our Team</span>
+      <h2>The Minds Behind <span class="gradient-text">TumorDetect AI</span></h2>
+      <p>B.Tech Computer Science & Engineering · Alliance University · 2026</p>
+    </div>
+
+    <div class="team-grid">
+      <div class="member-card glass-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="member-avatar"><i class="fas fa-user-astronaut"></i></div>
+        <h4>Raviprakash B P</h4>
+        <p class="role">Project Member</p>
+        <p class="college">Alliance University, B.Tech CSE</p>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/raviprakashbp" target="_blank">
+            <img src="/static/images/team_icons/linkedin.png" alt="LinkedIn" onerror="this.parentElement.innerHTML='<i class=\'fab fa-linkedin\'></i>'">
+          </a>
+          <a href="mailto:raviraviprakash76@gmail.com">
+            <img src="/static/images/team_icons/email.png" alt="Email" onerror="this.parentElement.innerHTML='<i class=\'fas fa-envelope\'></i>'">
+          </a>
+        </div>
+      </div>
+
+      <div class="member-card glass-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="member-avatar"><i class="fas fa-user-astronaut"></i></div>
+        <h4>Darshan S K</h4>
+        <p class="role">Project Member</p>
+        <p class="college">Alliance University, B.Tech CSE</p>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/darshan-sk242" target="_blank">
+            <img src="/static/images/team_icons/linkedin.png" alt="LinkedIn" onerror="this.parentElement.innerHTML='<i class=\'fab fa-linkedin\'></i>'">
+          </a>
+          <a href="mailto:darshansgowda74@gmail.com">
+            <img src="/static/images/team_icons/email.png" alt="Email" onerror="this.parentElement.innerHTML='<i class=\'fas fa-envelope\'></i>'">
+          </a>
+        </div>
+      </div>
+
+      <div class="member-card glass-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="member-avatar"><i class="fas fa-user-astronaut"></i></div>
+        <h4>Pavan Kumar M</h4>
+        <p class="role">Project Member</p>
+        <p class="college">Alliance University, B.Tech CSE</p>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/pavan-kumar-m-091403301" target="_blank">
+            <img src="/static/images/team_icons/linkedin.png" alt="LinkedIn" onerror="this.parentElement.innerHTML='<i class=\'fab fa-linkedin\'></i>'">
+          </a>
+          <a href="mailto:pavanmrk873@gmail.com">
+            <img src="/static/images/team_icons/email.png" alt="Email" onerror="this.parentElement.innerHTML='<i class=\'fas fa-envelope\'></i>'">
+          </a>
+        </div>
+      </div>
+
+      <div class="member-card glass-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="member-avatar"><i class="fas fa-user-astronaut"></i></div>
+        <h4>Ravindra G</h4>
+        <p class="role">Project Member</p>
+        <p class="college">Alliance University, B.Tech CSE</p>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/raviprakashbp" target="_blank">
+            <img src="/static/images/team_icons/linkedin.png" alt="LinkedIn" onerror="this.parentElement.innerHTML='<i class=\'fab fa-linkedin\'></i>'">
+          </a>
+          <a href="mailto:ravi0519g@gmail.com">
+            <img src="/static/images/team_icons/email.png" alt="Email" onerror="this.parentElement.innerHTML='<i class=\'fas fa-envelope\'></i>'">
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <i class="fas fa-brain"></i>
+        <span>TumorDetect AI</span>
+      </div>
+      <div class="footer-tech-row">
+        <span>Dense Attention U-Net</span>
+        <span class="dot">·</span>
+        <span>ResNet50</span>
+        <span class="dot">·</span>
+        <span>Grad-CAM</span>
+        <span class="dot">·</span>
+        <span>RGB+HSV+LAB Fusion</span>
+        <span class="dot">·</span>
+        <span>Flask + PyTorch</span>
+      </div>
+      <p>
+        Developed by Ghulam Awais
+      </p>
+      <p class="footer-disclaimer">
+        ⚠️ For academic and research purposes only. Not intended for clinical decision-making.
+      </p>
+      <p class="footer-copy">© 2026 TumorDetect AI. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- AOS -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({ duration: 900, once: true, offset: 80, easing: 'ease-out-cubic' });
+  </script>
+
+  <!-- 3D Brain Background -->
+  <script src="/static/brain3d.js"></script>
+
+  <!-- Navbar scroll -->
+  <script>
+    window.addEventListener("scroll", () => {
+      document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 50);
+    });
+  </script>
+
+  <!-- App Script -->
+  <script src="/static/script.js" defer></script>
+</body>
+</html>

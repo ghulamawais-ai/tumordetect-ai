@@ -1,0 +1,600 @@
+"""
+TumorDetect AI — Professional Medical Report Generator
+Uses ReportLab canvas for pixel-perfect clinical layout.
+"""
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm, inch
+from reportlab.platypus import Paragraph, Frame, KeepInFrame
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os
+from datetime import datetime
+
+# ─── Page dimensions ───────────────────────────────────────────────────
+W, H = A4          # 595.27 x 841.89 pts
+MARGIN_L  = 22*mm
+MARGIN_R  = 22*mm
+MARGIN_T  = 18*mm
+MARGIN_B  = 18*mm
+COL_W     = W - MARGIN_L - MARGIN_R   # usable width
+
+# ─── Brand palette ─────────────────────────────────────────────────────
+NAVY      = colors.HexColor("#0D2B55")   # header / section bars
+BLUE      = colors.HexColor("#1A56DB")   # accent lines
+TEAL      = colors.HexColor("#0E9F6E")   # success / no-tumor
+ORANGE    = colors.HexColor("#FF8800")   # medium risk
+RED       = colors.HexColor("#E02424")   # high risk
+LIGHT_BG  = colors.HexColor("#F0F4FF")   # alternating row bg
+MID_GREY  = colors.HexColor("#64748B")   # body secondary
+BORDER_C  = colors.HexColor("#CBD5E1")   # table borders
+WHITE     = colors.white
+BLACK     = colors.HexColor("#0F172A")
+
+
+# ─── Risk colour map ───────────────────────────────────────────────────
+def risk_color(risk_level):
+    r = risk_level.lower()
+    if "high"   in r: return RED
+    if "medium" in r: return ORANGE
+    if "low"    in r: return TEAL
+    return TEAL   # No Risk
+
+
+# ─── Paragraph style helper ────────────────────────────────────────────
+def ps(size=9, bold=False, color=BLACK, align=TA_LEFT, leading=None):
+    return ParagraphStyle(
+        "x",
+        fontName="Helvetica-Bold" if bold else "Helvetica",
+        fontSize=size,
+        textColor=color,
+        alignment=align,
+        leading=leading or size * 1.4,
+        wordWrap="LTR",
+    )
+
+
+# ─── Draw helpers ──────────────────────────────────────────────────────
+def hline(c, x1, y, x2, width=0.5, color=BORDER_C):
+    c.setStrokeColor(color)
+    c.setLineWidth(width)
+    c.line(x1, y, x2, y)
+
+
+def filled_rect(c, x, y, w, h, fill_color, stroke_color=None, radius=0):
+    c.setFillColor(fill_color)
+    if stroke_color:
+        c.setStrokeColor(stroke_color)
+        c.setLineWidth(0.5)
+        c.roundRect(x, y, w, h, radius, fill=1, stroke=1)
+    else:
+        c.roundRect(x, y, w, h, radius, fill=1, stroke=0)
+
+
+def draw_para(c, text, x, y, w, style, max_h=200):
+    """Draw a Paragraph inside a fixed-width frame, return height used."""
+    p = Paragraph(text or "—", style)
+    kif = KeepInFrame(w, max_h, [p], mode="truncate")
+    f = Frame(x, y - max_h, w, max_h, leftPadding=0, rightPadding=0,
+              topPadding=0, bottomPadding=0, showBoundary=0)
+    f.addFromList([kif], c)
+    w_actual, h_actual = p.wrap(w, max_h)
+    return h_actual
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  PAGE FURNITURE
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_header(c, page_num=1, total_pages=2):
+    """Full-width navy header bar with logo placeholder and report title."""
+    BAR_H = 28*mm
+    # Navy top bar
+    filled_rect(c, 0, H - BAR_H, W, BAR_H, NAVY)
+
+    # Left — logo area (white circle placeholder)
+    cx, cy = MARGIN_L + 10*mm, H - BAR_H/2
+    c.setFillColor(WHITE)
+    c.circle(cx, cy, 8*mm, fill=1, stroke=0)
+
+    logo_path = "static/images/logo.png"
+    if os.path.exists(logo_path):
+        c.drawImage(logo_path,
+                    cx - 7*mm, cy - 7*mm,
+                    width=14*mm, height=14*mm,
+                    mask="auto", preserveAspectRatio=True)
+    else:
+        c.setFillColor(BLUE)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawCentredString(cx, cy - 4, "T")
+
+    # Centre — title
+    c.setFillColor(WHITE)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(W / 2, H - 14*mm, "TUMORDETECT AI")
+    c.setFont("Helvetica", 9)
+    c.setFillColor(colors.HexColor("#94A3B8"))
+    c.drawCentredString(W / 2, H - 21*mm, "AI-Powered Neuro-Oncology Diagnostic Report")
+
+    # Right — date + page
+    now = datetime.now().strftime("%d %b %Y  %H:%M")
+    c.setFont("Helvetica", 8)
+    c.setFillColor(colors.HexColor("#94A3B8"))
+    c.drawRightString(W - MARGIN_R, H - 13*mm, f"Generated: {now}")
+    c.drawRightString(W - MARGIN_R, H - 20*mm, f"Page {page_num} of {total_pages}")
+
+    # Thin blue accent line below bar
+    c.setStrokeColor(BLUE)
+    c.setLineWidth(2.5)
+    c.line(0, H - BAR_H - 1, W, H - BAR_H - 1)
+
+
+def draw_footer(c, page_num=1):
+    """Footer bar with disclaimer."""
+    BAR_H = 10*mm
+    filled_rect(c, 0, 0, W, BAR_H, NAVY)
+    c.setFillColor(colors.HexColor("#94A3B8"))
+    c.setFont("Helvetica", 7)
+    disclaimer = (
+        "DISCLAIMER: This report is generated by an AI diagnostic system for ACADEMIC & RESEARCH "
+        "purposes only. It is NOT a substitute for professional medical advice, diagnosis, or treatment."
+    )
+    c.drawCentredString(W / 2, 3.5*mm, disclaimer)
+
+
+def section_heading(c, text, y):
+    """Draw a full-width section header band, return new y below it."""
+    BAR_H = 7*mm
+    filled_rect(c, MARGIN_L, y - BAR_H, COL_W, BAR_H, LIGHT_BG, BORDER_C, radius=2)
+    # Left blue accent stripe
+    filled_rect(c, MARGIN_L, y - BAR_H, 3, BAR_H, BLUE)
+    c.setFillColor(NAVY)
+    c.setFont("Helvetica-Bold", 9.5)
+    c.drawString(MARGIN_L + 6*mm, y - 5*mm, text.upper())
+    return y - BAR_H - 3*mm
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  REUSABLE TABLE RENDERER
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_kv_table(c, rows, y, col1_w=55*mm, col2_w=None):
+    """
+    Draw a key-value table.
+    rows = list of (label, value) or (label, value, highlight_color)
+    Returns y after last row.
+    """
+    if col2_w is None:
+        col2_w = COL_W - col1_w
+    ROW_H = 7.5*mm
+    x1 = MARGIN_L
+    x2 = x1 + col1_w
+
+    for i, row in enumerate(rows):
+        label = row[0]
+        value = str(row[1]) if row[1] not in (None, "", "None") else "—"
+        highlight = row[2] if len(row) > 2 else None
+
+        row_y = y - ROW_H
+        bg = LIGHT_BG if i % 2 == 0 else WHITE
+
+        # Row background
+        filled_rect(c, x1, row_y, col1_w + col2_w, ROW_H, bg, BORDER_C)
+
+        # Key cell
+        c.setFillColor(MID_GREY)
+        c.setFont("Helvetica-Bold", 8)
+        c.drawString(x1 + 2.5*mm, row_y + 2.3*mm, label)
+
+        # Value cell
+        if highlight:
+            # Coloured pill for risk / type
+            pill_w = min(len(value) * 5.5 + 8, col2_w - 4*mm)
+            filled_rect(c, x2 + 2*mm, row_y + 1.5*mm,
+                        pill_w, ROW_H - 3*mm, highlight, radius=2)
+            c.setFillColor(WHITE)
+            c.setFont("Helvetica-Bold", 8)
+            c.drawString(x2 + 4*mm, row_y + 2.3*mm, value)
+        else:
+            c.setFillColor(BLACK)
+            c.setFont("Helvetica", 8.5)
+            # Use Paragraph for long values (wraps)
+            p = Paragraph(value, ps(8.5, color=BLACK))
+            p_w, p_h = p.wrap(col2_w - 4*mm, ROW_H * 3)
+            if p_h > ROW_H:
+                # Taller row needed — re-draw bg taller
+                extra = p_h - ROW_H + 2*mm
+                filled_rect(c, x1, row_y - extra, col1_w + col2_w,
+                            ROW_H + extra, bg, BORDER_C)
+                c.setFillColor(MID_GREY)
+                c.setFont("Helvetica-Bold", 8)
+                c.drawString(x1 + 2.5*mm, row_y + 2.3*mm, label)
+                p.drawOn(c, x2 + 2*mm, row_y - extra + 1.5*mm)
+                y = row_y - extra
+                continue
+            else:
+                c.drawString(x2 + 2*mm, row_y + 2.3*mm, value)
+
+        y = row_y
+
+    return y
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  XAI EXPLANATION BLOCK
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_explanation_block(c, title, icon_label, body_text, y,
+                            accent_color=BLUE, bg_color=None):
+    """
+    Draw a labelled explanation block with wrapped body text.
+    Returns new y position.
+    """
+    if bg_color is None:
+        bg_color = colors.HexColor("#F8FAFF")
+
+    PADDING   = 3.5*mm
+    TITLE_H   = 6*mm
+    body_style = ps(8.5, color=BLACK, align=TA_JUSTIFY, leading=13)
+
+    # Measure body height first
+    p = Paragraph(body_text or "—", body_style)
+    _, body_h = p.wrap(COL_W - 2 * PADDING - 3, 800)
+
+    total_h = TITLE_H + body_h + 3 * PADDING
+
+    # Outer rounded box
+    filled_rect(c, MARGIN_L, y - total_h, COL_W, total_h, bg_color, BORDER_C, radius=3)
+    # Left accent stripe
+    filled_rect(c, MARGIN_L, y - total_h, 3, total_h, accent_color, radius=1)
+
+    # Title bar inside box
+    title_y = y - TITLE_H - PADDING
+    c.setFillColor(accent_color)
+    c.setFont("Helvetica-Bold", 8.5)
+    c.drawString(MARGIN_L + 6*mm, title_y + 1.5*mm, f"{icon_label}  {title.upper()}")
+
+    # Thin rule
+    hline(c, MARGIN_L + 3*mm, title_y - 1*mm,
+          MARGIN_L + COL_W - 3*mm, 0.3, colors.HexColor("#CBD5E1"))
+
+    # Body text
+    body_x = MARGIN_L + 3 + PADDING
+    body_y = y - total_h + PADDING
+    p.drawOn(c, body_x, body_y)
+
+    return y - total_h - 3*mm
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  CAM STATS ROW
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_cam_stats(c, mean_act, peak_act, area_pct, y):
+    """Three stat boxes side by side. Returns new y."""
+    BOX_H = 14*mm
+    BOX_W = COL_W / 3 - 2*mm
+    labels  = ["Mean Activation", "Peak Activation", "High-Activation Area"]
+    values  = [
+        f"{mean_act:.3f}" if mean_act is not None else "N/A",
+        f"{peak_act:.3f}" if peak_act is not None else "N/A",
+        f"{area_pct:.1f}%" if area_pct is not None else "N/A",
+    ]
+
+    for i, (lbl, val) in enumerate(zip(labels, values)):
+        bx = MARGIN_L + i * (BOX_W + 3*mm)
+        by = y - BOX_H
+        filled_rect(c, bx, by, BOX_W, BOX_H, LIGHT_BG, BORDER_C, radius=3)
+        # Accent top stripe
+        filled_rect(c, bx, by + BOX_H - 2, BOX_W, 2, BLUE, radius=1)
+        c.setFillColor(BLUE)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawCentredString(bx + BOX_W / 2, by + 5*mm, val)
+        c.setFillColor(MID_GREY)
+        c.setFont("Helvetica", 7.5)
+        c.drawCentredString(bx + BOX_W / 2, by + 2*mm, lbl)
+
+    return y - BOX_H - 4*mm
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  IMAGES GRID
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_images_grid(c, image_paths, y):
+    """2×2 image grid with labels. Returns new y."""
+    items = [(lbl, path) for lbl, path in image_paths.items()
+             if os.path.exists(path)]
+    if not items:
+        return y
+
+    COLS     = 2
+    IMG_SIZE = (COL_W - 6*mm) / COLS   # square
+    LABEL_H  = 6*mm
+    CELL_H   = IMG_SIZE + LABEL_H + 4*mm
+
+    for idx, (label, path) in enumerate(items):
+        col = idx % COLS
+        row = idx // COLS
+        cell_x = MARGIN_L + col * (IMG_SIZE + 6*mm)
+        cell_y = y - row * (CELL_H + 4*mm)
+
+        # White card background
+        filled_rect(c, cell_x, cell_y - CELL_H, IMG_SIZE, CELL_H,
+                    WHITE, BORDER_C, radius=3)
+
+        # Label bar at top of cell
+        filled_rect(c, cell_x, cell_y - LABEL_H, IMG_SIZE, LABEL_H,
+                    NAVY, radius=2)
+        c.setFillColor(WHITE)
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawCentredString(cell_x + IMG_SIZE / 2, cell_y - LABEL_H + 2*mm, label)
+
+        # Image
+        img_y = cell_y - CELL_H + 2*mm
+        try:
+            c.drawImage(path,
+                        cell_x + 1*mm, img_y,
+                        width=IMG_SIZE - 2*mm,
+                        height=IMG_SIZE,
+                        preserveAspectRatio=True,
+                        mask="auto")
+        except Exception:
+            c.setFillColor(colors.HexColor("#E2E8F0"))
+            c.rect(cell_x + 1*mm, img_y,
+                   IMG_SIZE - 2*mm, IMG_SIZE, fill=1, stroke=0)
+            c.setFillColor(MID_GREY)
+            c.setFont("Helvetica", 8)
+            c.drawCentredString(cell_x + IMG_SIZE / 2,
+                                img_y + IMG_SIZE / 2, "Image unavailable")
+
+    rows_used = (len(items) + 1) // COLS
+    return y - rows_used * (CELL_H + 4*mm) - 4*mm
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  RISK BADGE  (large, centred)
+# ═══════════════════════════════════════════════════════════════════════
+
+def draw_risk_badge(c, tumor_type, risk_level, confidence, y):
+    """Prominent diagnosis strip. Returns new y."""
+    STRIP_H = 18*mm
+    rc = risk_color(risk_level)
+
+    filled_rect(c, MARGIN_L, y - STRIP_H, COL_W, STRIP_H, rc, radius=4)
+
+    # Tumor type (large)
+    c.setFillColor(WHITE)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(MARGIN_L + 6*mm, y - 10*mm, tumor_type)
+
+    # Risk pill
+    pill_text = f"  {risk_level.upper()}  "
+    c.setFont("Helvetica-Bold", 8)
+    pill_w = c.stringWidth(pill_text, "Helvetica-Bold", 8) + 2
+    px = MARGIN_L + COL_W - pill_w - 8*mm
+    filled_rect(c, px, y - STRIP_H + 4*mm, pill_w, 8*mm,
+                colors.HexColor("#FFFFFF33"), radius=2)
+    c.setFillColor(WHITE)
+    c.drawString(px + 2*mm, y - STRIP_H + 6.5*mm, pill_text.strip())
+
+    # Confidence
+    c.setFont("Helvetica", 8)
+    c.setFillColor(colors.HexColor("#FFFFFFCC"))
+    c.drawString(MARGIN_L + 6*mm, y - 15*mm,
+                 f"Model Confidence: {confidence}")
+
+    return y - STRIP_H - 4*mm
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  MAIN ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════
+
+def generate_pdf(output_path, patient_data, image_paths,
+                 cam_mean=None, cam_peak=None, cam_area=None):
+    """
+    Generate a fully professional two-page clinical PDF report.
+
+    patient_data keys used:
+        Patient ID, Patient Name, Age, Gender, MRI Date,
+        Tumor Type, Risk Level, Model Confidence,
+        Tumor Location, Tumor Width, Tumor Height, Tumor Area,
+        Description, Possible Cause, Treatment
+    image_paths: dict  label -> absolute file path
+    cam_mean / cam_peak / cam_area: float | None  (Grad-CAM stats)
+    """
+
+    c = canvas.Canvas(output_path, pagesize=A4)
+    c.setTitle("TumorDetect AI — Diagnostic Report")
+    c.setAuthor("TumorDetect AI System")
+    c.setSubject("Brain Tumor MRI Analysis")
+
+    TOP_CONTENT = H - 28*mm - 6*mm   # just below header bar gap
+    tumor_type  = patient_data.get("Tumor Type", "Unknown")
+    risk_level  = patient_data.get("Risk Level", "Unknown")
+
+    # ══════════════════════════════════════
+    #  PAGE 1 — Patient + Diagnosis + XAI
+    # ══════════════════════════════════════
+    draw_header(c, page_num=1, total_pages=2)
+    draw_footer(c, page_num=1)
+
+    y = TOP_CONTENT
+
+    # ── PATIENT INFORMATION ──────────────────────────────────────────
+    y = section_heading(c, "Patient Information", y)
+    y = draw_kv_table(c, [
+        ("Patient ID",    patient_data.get("Patient ID",   "—")),
+        ("Full Name",     patient_data.get("Patient Name", "—")),
+        ("Age",           patient_data.get("Age",          "—")),
+        ("Gender",        patient_data.get("Gender",       "—")),
+        ("MRI Scan Date", patient_data.get("MRI Date",     "—")),
+        ("Report Date",   datetime.now().strftime("%d %B %Y")),
+    ], y)
+
+    y -= 5*mm
+
+    # ── DIAGNOSIS RESULT ─────────────────────────────────────────────
+    y = section_heading(c, "AI Diagnosis Result", y)
+
+    rc = risk_color(risk_level)
+    y = draw_risk_badge(c, tumor_type, risk_level,
+                        patient_data.get("Model Confidence", "N/A"), y)
+
+    y = draw_kv_table(c, [
+        ("Tumor Type",       tumor_type,                                   rc),
+        ("Risk Level",       risk_level,                                   rc),
+        ("Model Confidence", patient_data.get("Model Confidence", "N/A")),
+    ], y)
+
+    y -= 5*mm
+
+    # ── TUMOR MEASUREMENTS ───────────────────────────────────────────
+    y = section_heading(c, "Tumor Measurements  (Dense Attention U-Net)", y)
+    y = draw_kv_table(c, [
+        ("Bounding Box (px)", str(patient_data.get("Tumor Location", "N/A"))),
+        ("Width",             patient_data.get("Tumor Width",  "N/A")),
+        ("Height",            patient_data.get("Tumor Height", "N/A")),
+        ("Segmented Area",    patient_data.get("Tumor Area",   "N/A")),
+    ], y)
+
+    y -= 5*mm
+
+    # ── CLINICAL IMPRESSION ──────────────────────────────────────────
+    y = section_heading(c, "Clinical Impression", y)
+    impression = (
+        f"AI analysis of the submitted MRI scan indicates findings consistent with "
+        f"<b>{tumor_type}</b> (Risk Level: <b>{risk_level}</b>). "
+        "The Dense Attention U-Net segmentation model has delineated the tumour boundary "
+        "and computed spatial measurements. The ResNet50 classifier, trained on a four-class "
+        "brain tumour dataset, assigned the above diagnosis with the stated confidence. "
+        "Grad-CAM explainability highlights the regions of the scan most influential in this decision. "
+        "<b>This finding requires formal radiological and clinical evaluation before any clinical action is taken.</b>"
+    )
+    imp_p = Paragraph(impression, ps(8.5, color=BLACK, align=TA_JUSTIFY, leading=13))
+    imp_w, imp_h = imp_p.wrap(COL_W, 200)
+    imp_p.drawOn(c, MARGIN_L, y - imp_h)
+    y = y - imp_h - 5*mm
+
+    # ── GRAD-CAM STATISTICS ──────────────────────────────────────────
+    y = section_heading(c, "Grad-CAM Activation Statistics  (ResNet50 · layer4)", y)
+    y = draw_cam_stats(c, cam_mean, cam_peak, cam_area, y)
+
+    # ── EXPLAINABLE AI EXPLANATIONS ──────────────────────────────────
+    y = section_heading(c, "Explainable AI Report  (Grad-CAM + ResNet50)", y)
+
+    y = draw_explanation_block(
+        c,
+        title="AI Finding — What the Grad-CAM Shows",
+        icon_label="[1]",
+        body_text=patient_data.get("Description", "—"),
+        y=y,
+        accent_color=BLUE,
+        bg_color=colors.HexColor("#F0F4FF"),
+    )
+
+    y = draw_explanation_block(
+        c,
+        title="Clinical Context & Possible Cause",
+        icon_label="[2]",
+        body_text=patient_data.get("Possible Cause", "—"),
+        y=y,
+        accent_color=colors.HexColor("#7C3AED"),
+        bg_color=colors.HexColor("#F5F3FF"),
+    )
+
+    y = draw_explanation_block(
+        c,
+        title="Treatment & Management Pathway",
+        icon_label="[3]",
+        body_text=patient_data.get("Treatment", "—"),
+        y=y,
+        accent_color=TEAL,
+        bg_color=colors.HexColor("#F0FDF4"),
+    )
+
+    # ══════════════════════════════════════
+    #  PAGE 2 — MRI Images
+    # ══════════════════════════════════════
+    c.showPage()
+    draw_header(c, page_num=2, total_pages=2)
+    draw_footer(c, page_num=2)
+
+    y = TOP_CONTENT
+
+    # ── MRI ANALYSIS IMAGES ──────────────────────────────────────────
+    y = section_heading(c, "MRI Analysis Images", y)
+
+    # Brief image legend
+    legend_lines = [
+        "<b>Original MRI</b> — Raw uploaded scan.",
+        "<b>CLAHE Enhanced (RGB+HSV+LAB)</b> — Preprocessed with colour contrast channeling.",
+        "<b>Dense Attention U-Net Mask</b> — Pixel-level tumour segmentation overlay.",
+        "<b>ResNet50 Grad-CAM Heatmap</b> — Regions driving the classification decision.",
+    ]
+    for line in legend_lines:
+        lp = Paragraph(line, ps(8, color=MID_GREY, leading=11))
+        lw, lh = lp.wrap(COL_W, 20)
+        lp.drawOn(c, MARGIN_L, y - lh)
+        y -= lh + 1.5*mm
+
+    y -= 3*mm
+    y = draw_images_grid(c, image_paths, y)
+
+    # ── SIGNATURE BLOCK ──────────────────────────────────────────────
+    y -= 6*mm
+    hline(c, MARGIN_L, y, MARGIN_L + COL_W, 0.5, BORDER_C)
+    y -= 5*mm
+
+    # Two-column signature area
+    half = COL_W / 2 - 5*mm
+    # Left: AI system
+    filled_rect(c, MARGIN_L, y - 20*mm, half, 20*mm, LIGHT_BG, BORDER_C, radius=3)
+    c.setFillColor(MID_GREY)
+    c.setFont("Helvetica", 7.5)
+    c.drawCentredString(MARGIN_L + half / 2, y - 8*mm, "Authorized By")
+    c.setFillColor(NAVY)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawCentredString(MARGIN_L + half / 2, y - 13*mm, "TumorDetect AI Diagnostic System")
+    c.setFillColor(MID_GREY)
+    c.setFont("Helvetica", 7.5)
+    c.drawCentredString(MARGIN_L + half / 2, y - 18*mm,
+                        "Alliance University · B.Tech CSE · 2026")
+
+    # Right: clinician placeholder
+    rx = MARGIN_L + half + 10*mm
+    filled_rect(c, rx, y - 20*mm, half, 20*mm, LIGHT_BG, BORDER_C, radius=3)
+    c.setFillColor(MID_GREY)
+    c.setFont("Helvetica", 7.5)
+    c.drawCentredString(rx + half / 2, y - 8*mm, "Reviewing Clinician")
+    # signature line
+    hline(c, rx + 8*mm, y - 14*mm, rx + half - 8*mm, 0.6, MID_GREY)
+    c.drawCentredString(rx + half / 2, y - 18*mm, "Signature / Stamp")
+
+    # ── FINAL DISCLAIMER BOX ─────────────────────────────────────────
+    y -= 26*mm
+    disc_text = (
+        "<b>DISCLAIMER:</b> This report is produced by an AI-based research prototype (TumorDetect AI) "
+        "developed as a B.Tech Final Year Capstone Project at Alliance University, Bengaluru. "
+        "It is intended <b>solely for academic and research evaluation</b>. "
+        "It does <b>not</b> constitute a clinical diagnosis and must <b>not</b> be used for "
+        "medical decision-making without review by a qualified radiologist or neuro-oncologist. "
+        "The authors accept no clinical or legal liability arising from the use of this report."
+    )
+    disc_p = Paragraph(disc_text, ps(7.5, color=MID_GREY, align=TA_JUSTIFY, leading=11))
+    dw, dh = disc_p.wrap(COL_W - 8*mm, 100)
+    box_h = dh + 6*mm
+    filled_rect(c, MARGIN_L, y - box_h, COL_W, box_h,
+                colors.HexColor("#FFF7ED"), colors.HexColor("#FDE68A"), radius=3)
+    # Orange left stripe
+    filled_rect(c, MARGIN_L, y - box_h, 3, box_h, ORANGE, radius=1)
+    disc_p.drawOn(c, MARGIN_L + 5*mm, y - box_h + 3*mm)
+
+    # Done
+    c.save()
+    print(f"PDF report saved: {output_path}")
